@@ -18,7 +18,7 @@ if (toggle && nav) {
 
 const galleryPhotos = document.querySelectorAll('.gallery-photo');
 galleryPhotos.forEach((photo) => {
-  photo.addEventListener('click', () => {
+  const openViewer = () => {
     const fullImage = photo.src;
     const viewer = document.createElement('div');
     viewer.className = 'image-viewer';
@@ -31,12 +31,32 @@ galleryPhotos.forEach((photo) => {
     const closeViewer = () => {
       if (viewer.classList.contains('is-closing')) return;
       viewer.classList.add('is-closing');
-      document.removeEventListener('keydown', handleKeydown);
       const closeDelay = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 200;
-      window.setTimeout(() => viewer.remove(), closeDelay);
+      window.setTimeout(() => {
+        document.removeEventListener('keydown', handleKeydown);
+        document.removeEventListener('focusin', keepFocusInViewer);
+        viewer.remove();
+        photo.focus();
+      }, closeDelay);
     };
     const handleKeydown = (event) => {
       if (event.key === 'Escape') closeViewer();
+      if (event.key === 'Tab') {
+        const focusableItems = viewer.querySelectorAll('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
+        const firstItem = focusableItems[0];
+        const lastItem = focusableItems[focusableItems.length - 1];
+
+        if (event.shiftKey && document.activeElement === firstItem) {
+          event.preventDefault();
+          lastItem.focus();
+        } else if (!event.shiftKey && document.activeElement === lastItem) {
+          event.preventDefault();
+          firstItem.focus();
+        }
+      }
+    };
+    const keepFocusInViewer = (event) => {
+      if (!viewer.contains(event.target)) closeButton.focus();
     };
 
     document.body.appendChild(viewer);
@@ -45,9 +65,34 @@ galleryPhotos.forEach((photo) => {
       if (event.target === viewer) closeViewer();
     });
     document.addEventListener('keydown', handleKeydown);
+    document.addEventListener('focusin', keepFocusInViewer);
     closeButton.focus();
+  };
+
+  photo.addEventListener('click', openViewer);
+  photo.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      openViewer();
+    }
   });
 });
+
+const heroVideo = document.querySelector('.idea-film-video');
+const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+if (heroVideo) {
+  const updateHeroVideoMotion = () => {
+    if (motionPreference.matches) {
+      heroVideo.pause();
+    } else {
+      heroVideo.play().catch(() => {});
+    }
+  };
+
+  updateHeroVideoMotion();
+  motionPreference.addEventListener('change', updateHeroVideoMotion);
+}
 
 const experienceItems = document.querySelectorAll('.experience-item');
 const experiencePanels = document.querySelectorAll('.experience-panel');
@@ -79,4 +124,22 @@ experienceItems.forEach((item) => {
   item.addEventListener('click', activate);
   item.addEventListener('focus', activate);
   if (experienceHover.matches) item.addEventListener('mouseenter', activate);
+});
+
+const styleItems = document.querySelectorAll('.style-row');
+const styleHover = window.matchMedia('(hover: hover) and (pointer: fine)');
+
+function activateStyle(activeItem) {
+  styleItems.forEach((item) => {
+    const active = item === activeItem;
+    item.classList.toggle('is-active', active);
+    item.setAttribute('aria-pressed', String(active));
+  });
+}
+
+styleItems.forEach((item) => {
+  const activate = () => activateStyle(item);
+  item.addEventListener('click', activate);
+  item.addEventListener('focus', activate);
+  if (styleHover.matches) item.addEventListener('mouseenter', activate);
 });
