@@ -1,13 +1,17 @@
-# Yabu Ink — sitio inicial
+# Yabu Ink Tattoo Studio
 
-Landing page adaptable para un estudio de tatuajes, hecha con HTML, CSS y JavaScript sin dependencias de compilación.
+Sitio estático y adaptable de Yabu Ink Tattoo Studio en Orlando, Florida. Está hecho con HTML, CSS y JavaScript sin dependencias de compilación.
 
-## Abrir
+## Archivos principales
 
-Abre `index.html` directamente en el navegador. La tipografía usa Google Fonts; el resto del diseño, incluida la ilustración botánica del hero y las piezas de galería, está dibujado en CSS/SVG.
+- `index.html`: contenido, enlaces, metadatos SEO y datos estructurados.
+- `styles.css`: diseño responsive, colores y estados de interacción.
+- `script.js`: menú móvil, galería con lightbox y controles interactivos.
 
-## Antes de publicar
+## Recursos
 
-- Cambiar la ubicación, horarios y datos de contacto si fueran distintos.
-- Sustituir las ilustraciones editoriales de la galería por fotografías reales de trabajos autorizados.
-- Actualizar el enlace de Instagram y conectar el formulario de reserva cuando se elija una plataforma.
+Las fotografías de trabajos, la imagen de Nick y el logo oficial están en `images/`. El video de fondo usado por el sitio es `videos/process-01-web.mp4`, una versión H.264 optimizada y sin audio.
+
+## Información del estudio
+
+La dirección, horarios, teléfono, WhatsApp e Instagram del sitio usan los datos confirmados del estudio. Si alguno cambia, actualízalo en `index.html` y en los datos JSON-LD del `<head>`.

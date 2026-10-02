@@ -2,6 +2,12 @@ const toggle = document.querySelector('.menu-toggle');
 const nav = document.querySelector('.site-nav');
 
 if (toggle && nav) {
+  const closeMenu = () => {
+    nav.classList.remove('open');
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.setAttribute('aria-label', 'Open menu');
+  };
+
   toggle.addEventListener('click', () => {
     const open = toggle.getAttribute('aria-expanded') === 'true';
     toggle.setAttribute('aria-expanded', String(!open));
@@ -10,10 +16,15 @@ if (toggle && nav) {
   });
 
   nav.querySelectorAll('a').forEach(link => link.addEventListener('click', () => {
-    nav.classList.remove('open');
-    toggle.setAttribute('aria-expanded', 'false');
-    toggle.setAttribute('aria-label', 'Open menu');
+    closeMenu();
   }));
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') {
+      closeMenu();
+      toggle.focus();
+    }
+  });
 }
 
 const galleryPhotos = document.querySelectorAll('.gallery-photo');
@@ -36,6 +47,7 @@ galleryPhotos.forEach((photo) => {
         document.removeEventListener('keydown', handleKeydown);
         document.removeEventListener('focusin', keepFocusInViewer);
         viewer.remove();
+        document.body.classList.remove('image-viewer-open');
         photo.focus();
       }, closeDelay);
     };
@@ -60,6 +72,7 @@ galleryPhotos.forEach((photo) => {
     };
 
     document.body.appendChild(viewer);
+    document.body.classList.add('image-viewer-open');
     closeButton.addEventListener('click', closeViewer);
     viewer.addEventListener('click', (event) => {
       if (event.target === viewer) closeViewer();
@@ -82,16 +95,31 @@ const heroVideo = document.querySelector('.idea-film-video');
 const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 if (heroVideo) {
+  let heroVideoVisible = false;
   const updateHeroVideoMotion = () => {
-    if (motionPreference.matches) {
+    if (motionPreference.matches || !heroVideoVisible) {
       heroVideo.pause();
     } else {
       heroVideo.play().catch(() => {});
     }
   };
 
-  updateHeroVideoMotion();
-  motionPreference.addEventListener('change', updateHeroVideoMotion);
+  if ('IntersectionObserver' in window) {
+    const heroVideoObserver = new IntersectionObserver(([entry]) => {
+      heroVideoVisible = entry.isIntersecting;
+      updateHeroVideoMotion();
+    }, { threshold: 0.1 });
+    heroVideoObserver.observe(heroVideo);
+  } else {
+    heroVideoVisible = true;
+    updateHeroVideoMotion();
+  }
+
+  if (motionPreference.addEventListener) {
+    motionPreference.addEventListener('change', updateHeroVideoMotion);
+  } else {
+    motionPreference.addListener(updateHeroVideoMotion);
+  }
 }
 
 const experienceItems = document.querySelectorAll('.experience-item');
@@ -111,7 +139,7 @@ function activateExperience(key) {
     panel.classList.toggle('is-active', active);
 
     if (!video) return;
-    if (active) {
+    if (active && !motionPreference.matches) {
       video.play().catch(() => {});
     } else {
       video.pause();
@@ -126,20 +154,13 @@ experienceItems.forEach((item) => {
   if (experienceHover.matches) item.addEventListener('mouseenter', activate);
 });
 
-const styleItems = document.querySelectorAll('.style-row');
-const styleHover = window.matchMedia('(hover: hover) and (pointer: fine)');
+const updateExperienceMotion = () => {
+  const activeItem = document.querySelector('.experience-item.is-active');
+  if (activeItem) activateExperience(activeItem.dataset.experience);
+};
 
-function activateStyle(activeItem) {
-  styleItems.forEach((item) => {
-    const active = item === activeItem;
-    item.classList.toggle('is-active', active);
-    item.setAttribute('aria-pressed', String(active));
-  });
+if (motionPreference.addEventListener) {
+  motionPreference.addEventListener('change', updateExperienceMotion);
+} else {
+  motionPreference.addListener(updateExperienceMotion);
 }
-
-styleItems.forEach((item) => {
-  const activate = () => activateStyle(item);
-  item.addEventListener('click', activate);
-  item.addEventListener('focus', activate);
-  if (styleHover.matches) item.addEventListener('mouseenter', activate);
-});
